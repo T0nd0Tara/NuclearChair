@@ -10,6 +10,32 @@ class Map
 {
     std::vector<std::vector<Block>> m_arr;
 
+    void shift(size_t x, size_t y)
+    {
+        if (x != 0)
+        {
+            
+            for (auto& row: m_arr)
+            {
+                row.resize(row.size() + x);
+                for (int i = row.size() - 1; i >= x; i--)
+                    row[i] = row[i - x];
+                for (int i = x - 1; i >= 0; i--)
+                    row[i] = Block();
+            }
+        }
+
+        if (y != 0)
+        {
+            m_arr.resize(m_arr.size() + y);
+            for (int i = m_arr.size() - 1; i >= y; i--)
+                m_arr[i] = m_arr[i - y];
+            for (int i = 0; i < y; i++)
+                m_arr[i].clear();
+        }
+
+
+    }
 public:
     Map(int width = 0, int height = 0)
     {
@@ -24,6 +50,28 @@ public:
             || y >= m_arr.size()) return Block();
         if (x >= m_arr[y].size()) return Block();
         return m_arr[y][x];
+    }
+
+    void set(int x, int y, Block b)
+    {
+        if (y < 0)
+        {
+            shift(0,-y);
+            y = 0;
+        }
+        if (x < 0)
+        {
+            shift(-x, 0);
+            x = 0;
+        }
+
+        if (y >= m_arr.size())
+            m_arr.resize(y + 1);
+        if (x >= m_arr[y].size())
+            m_arr[y].resize(x + 1);
+        
+        m_arr[y][x] = b;
+
     }
 
     void shrink_to_fit()
@@ -78,10 +126,10 @@ public:
         m_arr.shrink_to_fit();
     }
 
-    inline const std::vector<Block>& operator[](int i) const
-    {
-        return m_arr[i];
-    }
+    // inline const std::vector<Block>& operator[](int i) const
+    // {
+    //     return m_arr[i];
+    // }
 
     friend std::ofstream& operator<<(std::ofstream& f, Map& map)
     {
