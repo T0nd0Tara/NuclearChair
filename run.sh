@@ -1,0 +1,6 @@
+#!/bin/bash
+
+g++ -I ~/code-libs/olcPixelGameEngine -o main main.cpp \
+    -lX11 -lGL -lpthread -lpng -lstdc++fs -std=c++17 -ggdb \
+    -Wall -Wextra -Wno-unknown-pragmas -Wno-unused-parameter -Wno-sign-compare -Wno-unused-but-set-variable \
+    && ./main
