@@ -65,6 +65,13 @@ private:
 
         // BG Mode
         if (GetKey(olc::B).bPressed) bBGMode = !bBGMode;
+
+        if (GetKey(olc::ENTER).bHeld)
+        {
+            
+            map.set(vCurrCell.x, vCurrCell.y, Block(nCurrDBlock, true, bBGMode));
+            vCurrCell = vCurrCell.max({0,0});
+        }
     }
     
     void tvDrawRectDecal(olc::vf2d pos, olc::vf2d size, olc::Pixel col = olc::WHITE) 
@@ -79,12 +86,17 @@ public:
 	{
         ConsoleCaptureStdOut(true);
         tv = olc::TileTransformedView({ ScreenWidth(), ScreenHeight() }, { BLOCK_SIZE, BLOCK_SIZE });
+        tv.SetZoom(0.5f, {0.0f,0.0f});
         map.resize(ScreenWidth(), ScreenHeight());
 
+        
+        std::set<std::filesystem::path> files;
+        for (const auto& file : std::filesystem::directory_iterator("./Blocks"))
+            files.insert(file.path());
+
         vDBlocks.push_back(nullptr);
-        using std::filesystem::directory_iterator;
-        for (const auto & file : directory_iterator("./Blocks")){
-            std::string sPath = file.path();
+        for (const auto & path : files){
+            const std::string sPath = path;
             if (sPath.size() <= 4) continue;
             if (sPath.substr(sPath.size() - 4,4) != ".png") continue;
             vDBlocks.push_back(new olc::Decal(new olc::Sprite(sPath)));
@@ -108,10 +120,10 @@ public:
         }
 
         // Drawing
-        olc::vf2d fTL = tv.GetWorldTL();
-        olc::vf2d fBR = tv.GetWorldBR();
-        olc::vi2d TL = fTL.floor();
-        olc::vi2d BR = fBR.ceil();
+        const olc::vf2d fTL = tv.GetWorldTL();
+        const olc::vf2d fBR = tv.GetWorldBR();
+        const olc::vi2d TL = fTL.floor();
+        const olc::vi2d BR = fBR.ceil();
 
         // Draw Grid
         if (bDrawGrid)
@@ -140,7 +152,7 @@ public:
                 if (!block.bVisible) continue;
                 if (block.nDecal == 0) continue;
 
-                olc::Pixel tint = (block.bBG)? olc::GREY : olc::WHITE;
+                olc::Pixel tint = (block.bBG)? olc::DARK_GREY : olc::WHITE;
                 tv.DrawDecal(olc::vf2d{(float)x, (float)y} * BLOCK_SIZE, vDBlocks[block.nDecal], olc::vf2d{1.0f,1.0f} * BLOCK_SIZE, tint);
             }
 
@@ -157,11 +169,13 @@ public:
         if (bBGMode) DrawStringDecal(olc::vf2d{1.0f,1.0f}, "BG MODE");
 
         // Drawing Preview Block
-        olc::vi2d vBlockPos = olc::vi2d{ScreenWidth(), ScreenHeight()} - olc::vi2d{BLOCK_SIZE + 1, BLOCK_SIZE + 1};
+        int prevSize = BLOCK_SIZE / 2;
+        olc::vi2d vBlockPos = olc::vi2d{ScreenWidth(), ScreenHeight()} - olc::vi2d{prevSize + 1, prevSize + 1};
+        const std::array<olc::vf2d, 4> pos{vBlockPos, vBlockPos + olc::vi2d{0, prevSize},vBlockPos + olc::vi2d{prevSize, prevSize}, vBlockPos + olc::vi2d{prevSize, 0}};
         if (vDBlocks[nCurrDBlock])
-            DrawDecal(vBlockPos, vDBlocks[nCurrDBlock]);
+            DrawWarpedDecal(vDBlocks[nCurrDBlock], pos);
         else
-            DrawRect(vBlockPos, olc::vi2d{BLOCK_SIZE - 1,BLOCK_SIZE - 1});
+            DrawRect(vBlockPos, olc::vi2d{prevSize - 1,prevSize - 1});
 		return true;
 	}
 
@@ -180,11 +194,12 @@ public:
                 bDrawGrid = false;
                 std::cout << "Turning off grid\n";
             }
-            if (c2 == "on" || c2 == "1")
+            else if (c2 == "on" || c2 == "1")
             {
                 bDrawGrid = true;
                 std::cout << "Turning on grid\n";
             }
+            else std::cout << "Unknown subcommand '" << c2 << "' for command 'grid'\n";
             return true;
         }
         if (c1 == "save")
@@ -197,7 +212,7 @@ public:
             }
 
             map.shrink_to_fit();
-            std::ofstream f(c2, std::ios::binary | std::fstream::trunc);
+            std::ofstream f(MAP_DIR + c2, std::ios::binary | std::fstream::trunc);
             if (!f.is_open())
             {
                 std::cout << "Unable to open file `" << c2 << "`. For some reason.\n";
@@ -221,7 +236,7 @@ public:
             }
             map.clear();
 
-            std::ifstream f(c2, std::ios::binary);
+            std::ifstream f(MAP_DIR + c2, std::ios::binary);
             if (!f.is_open())
             {
                 std::cout << "Unable to open file `" << c2 << "`. For some reason.\n";
