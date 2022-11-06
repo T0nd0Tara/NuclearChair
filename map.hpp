@@ -2,19 +2,21 @@
 
 #include <vector>
 #include <fstream>
+#include <cassert>
 
 #include <olcPixelGameEngine.h>
 #include "block.hpp"
+#include "entity.hpp"
 
 class Map
 {
+
     std::vector<std::vector<Block>> m_arr;
 
     void shift(size_t x, size_t y)
     {
         if (x != 0)
         {
-            
             for (auto& row: m_arr)
             {
                 row.resize(row.size() + x);
@@ -33,14 +35,19 @@ class Map
             for (int i = 0; i < y; i++)
                 m_arr[i].clear();
         }
-
-
     }
+public:
+
+    Mob player;
+    std::vector<Mob> vMobs;
+
 public:
     Map(int width = 0, int height = 0)
     {
-        resize(width, height);
+        m_arr.emplace_back();
+        m_arr.back().emplace_back();
 
+        resize(width, height);
     }
 
     inline Block get(int x, int y) const noexcept
@@ -54,15 +61,15 @@ public:
 
     void set(int x, int y, Block b)
     {
-        if (y < 0)
-        {
-            shift(0,-y);
-            y = 0;
-        }
         if (x < 0)
         {
             shift(-x, 0);
             x = 0;
+        }
+        if (y < 0)
+        {
+            shift(0,-y);
+            y = 0;
         }
 
         if (y >= m_arr.size())
@@ -76,8 +83,10 @@ public:
 
     void shrink_to_fit()
     {
+        if (m_arr.size() == 1 && m_arr.back().size() == 1) return;
+
         // clearing empty rows
-        while (true)
+        while (m_arr.size() > 1)
         {
             if (m_arr.back().size() == 0)
             {
@@ -107,10 +116,10 @@ public:
 
     void resize(int width, int height)
     {
-        for (int y=0; y<height; y++)
+        for (int y=m_arr.size()-1; y<height; y++)
         {
             m_arr.emplace_back();
-            for (int x=0; x<height; x++)
+            for (int x=m_arr[y].size() - 1; x<height; x++)
                 m_arr[y].emplace_back();
         }
     }
@@ -126,13 +135,21 @@ public:
         m_arr.shrink_to_fit();
     }
 
-    // inline const std::vector<Block>& operator[](int i) const
-    // {
-    //     return m_arr[i];
-    // }
 
     friend std::ofstream& operator<<(std::ofstream& f, Map& map)
     {
+        map.shrink_to_fit();
+
+        // write player
+        f.write((char*)&map.player, sizeof(map.player));
+        f << '\n';
+
+        // write mobs
+        for (const auto& mob : map.vMobs)
+            f.write((char*)&mob, sizeof(mob));
+        f << '\n';
+
+        // write map
         for (size_t y = 0; y<map.m_arr.size(); y++)
         {
             for (size_t x=0; x<map.m_arr[y].size(); x++)
@@ -147,6 +164,27 @@ public:
 
     friend std::ifstream& operator>>(std::ifstream& f, Map& map)
     {
+        map.clear();
+        map.vMobs.clear();
+       
+        // read player
+        if (f.peek() != '\n')
+        {
+            f.read((char*)&map.player, sizeof(map.player));
+            assert(f.peek() == '\n');
+
+        }
+        f.ignore();
+
+        // read mobs
+        while (f.peek() != '\n')
+        {
+            map.vMobs.emplace_back();
+            f.read((char*)&map.vMobs.back(), sizeof(map.vMobs.back()));
+        }
+        f.ignore();
+
+        // read map
         while (!f.eof())
         {
             
