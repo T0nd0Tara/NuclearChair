@@ -89,13 +89,22 @@ private:
                     vMobs.erase(it);
 
                 if (nCurrDecal == 0) break;
-                vMobs.emplace_back(vCurrCell, nCurrDecal, Mob::mobHp(nCurrDecal));
+                if (nCurrDecal == 1)
+                    player = Mob(vCurrCell, nCurrDecal, Mob::mobHp(nCurrDecal)); 
+                else
+                    vMobs.emplace_back(vCurrCell, nCurrDecal, Mob::mobHp(nCurrDecal));
                 break;
             }
             default:
                 assert(false && "Unimplemented type try to set itself");
             }
             vCurrCell = vCurrCell.max({0,0});
+        }
+
+        // fill area
+        if (GetKey(olc::F).bPressed && nCurrType == (int)WT::BLOCKS)
+        {
+            map.fillArea(vCurrCell, nCurrDecal, true, bBGMode);
         }
 
         // change world type
@@ -122,7 +131,7 @@ public:
 
         nCurrType = magic_enum::enum_integer(WT::BLOCKS);
 
-
+        // load decals
         for (int nType = 0; nType < magic_enum::enum_count<WT>(); nType++)
         {
             std::set<std::filesystem::path> files;
@@ -158,7 +167,7 @@ public:
         if (GetKey(olc::TAB).bPressed) 
             ConsoleShow(olc::TAB, true);
 
-        Clear(olc::CYAN);
+        Clear(BG_COLOR);
 
         // Controls
         if (!IsConsoleShowing())
@@ -203,13 +212,15 @@ public:
                 tv.DrawDecal(olc::vf2d{(float)x, (float)y} * BLOCK_SIZE, vDecals[(int)WT::BLOCKS][block.nDecal], olc::vf2d{1.0f,1.0f} * BLOCK_SIZE, tint);
             }
         
+        // draw player
+        if (player.nDecal == 1)
+            tv.DrawPartialDecal(player.pos * BLOCK_SIZE, vDecals[(int)WT::MOBS][player.nDecal], olc::vf2d{0,0}, MOB_SIZE, BLOCK_SIZE * BLOCK_SIZE / MOB_SIZE);
         // draw mobs
         for (const auto& mob : vMobs)
         {
-            //TODO: dont draw mobs if outside of screen
-            // if (mob.pos.x < TL.x || mob.pos.y < TL.y) continue;
-            // if (mob.pos.)
-            tv.DrawPartialDecal(mob.pos * BLOCK_SIZE, vDecals[(int)WT::MOBS][mob.nDecal], olc::vf2d{0,0}, MOB_SIZE, BLOCK_SIZE * BLOCK_SIZE / MOB_SIZE);
+            olc::vi2d relSize = BLOCK_SIZE * olc::vi2d{1,1};
+            if (!tv.IsRectVisible(mob.pos * BLOCK_SIZE, relSize)) continue;
+            tv.DrawPartialDecal(mob.pos * BLOCK_SIZE, BLOCK_SIZE * relSize, vDecals[(int)WT::MOBS][mob.nDecal], olc::vf2d{0,0}, MOB_SIZE);
         }
 
         if (vCurrCell.x < TL.x / BLOCK_SIZE) vCurrCell.x = TL.x / BLOCK_SIZE;
@@ -324,6 +335,12 @@ public:
         if (c1 == "clear" || c1 == "erase")
         {
             map.clear();
+            std::string c2;
+            ss >> c2;
+            if (c2 == "all")
+            {
+                map.vMobs.clear();
+            }
             return true;
         }
 

@@ -22,6 +22,14 @@ public:
 
     Block(const Block&) = default;
 
+    inline bool operator==(const Block& rhs) const 
+    {
+        return 
+            nDecal == rhs.nDecal &&
+            bVisible == rhs.bVisible &&
+            bBG == rhs.bBG;
+    }
+
     Block& operator=(Block rhs)
     {
         nDecal = rhs.nDecal;

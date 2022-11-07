@@ -5,7 +5,7 @@
 struct Object
 {
     int nDecal;
-    olc::vi2d pos;
+    olc::vf2d pos;
     
     Object(olc::vi2d start_pos = {0,0}, int decal = -1)
         : nDecal(decal), pos(start_pos)
@@ -25,7 +25,7 @@ enum Mobs : int
 struct Mob : public Object
 {
     int nHp;
-    Mob(olc::vi2d start_pos = {0,0}, int decal = -1, int hp = 0)
+    Mob(olc::vf2d start_pos = {0,0}, int decal = -1, int hp = 0)
         : Object(start_pos, decal), nHp(hp)
     {
     }

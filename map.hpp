@@ -8,6 +8,8 @@
 #include "block.hpp"
 #include "entity.hpp"
 
+#define MAX_FILLAREA_BLOCKS 100 
+
 class Map
 {
 
@@ -35,6 +37,37 @@ class Map
             for (int i = 0; i < y; i++)
                 m_arr[i].clear();
         }
+    }
+
+    size_t m_nFillAreaBlocks;
+    template <typename... T>
+    olc::vi2d subFillArea(olc::vi2d pos, T ... args)
+    {
+        set(pos.x, pos.y, Block(args...));
+        pos = pos.max({0,0});
+        m_nFillAreaBlocks++;
+        if (m_nFillAreaBlocks >= MAX_FILLAREA_BLOCKS) return pos;
+
+
+        if (get(pos.x + 1, pos.y) == Block()) 
+        {
+            pos = subFillArea({pos.x + 1, pos.y}, args...);
+            pos.x--;
+        }
+        if (get(pos.x, pos.y + 1) == Block()) {
+            pos = subFillArea({pos.x, pos.y + 1}, args...);
+            pos.y--;
+        }
+        if (get(pos.x - 1, pos.y) == Block()) {
+            pos = subFillArea({pos.x - 1, pos.y}, args...);
+            pos.x++;
+        }        
+        if (get(pos.x, pos.y - 1) == Block()) {
+            pos = subFillArea({pos.x, pos.y - 1}, args...);
+            pos.y++;
+        }
+
+        return pos;
     }
 public:
 
@@ -78,6 +111,14 @@ public:
             m_arr[y].resize(x + 1);
         
         m_arr[y][x] = b;
+
+    }
+
+    template <typename... T>
+    inline void fillArea(olc::vi2d pos, T ... args)
+    {
+        m_nFillAreaBlocks = 0;
+        subFillArea(pos, args...);
 
     }
 

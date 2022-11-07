@@ -29,6 +29,7 @@
 #define MOB_SPRITE_HEIGHT 20
 #define MOB_SIZE olc::vi2d{MOB_SPRITE_HEIGHT, MOB_SPRITE_HEIGHT}
 
+#define BG_COLOR olc::CYAN
 // World Types
 enum class WT : int8_t
 {
