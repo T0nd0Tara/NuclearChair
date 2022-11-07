@@ -340,6 +340,7 @@ public:
             if (c2 == "all")
             {
                 map.vMobs.clear();
+                map.player.nDecal = 0;
             }
             return true;
         }
