@@ -91,6 +91,10 @@ public:
         if (x >= m_arr[y].size()) return Block();
         return m_arr[y][x];
     }
+    inline Block get(olc::vi2d pos) const noexcept
+    {
+        return get(pos.x, pos.y);
+    }
 
     void set(int x, int y, Block b)
     {

@@ -163,6 +163,8 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+        auto startTime = std::chrono::high_resolution_clock::now();
+
         if (GetKey(olc::ESCAPE).bPressed) return false;
         if (GetKey(olc::TAB).bPressed) 
             ConsoleShow(olc::TAB, true);
@@ -212,9 +214,6 @@ public:
                 tv.DrawDecal(olc::vf2d{(float)x, (float)y} * BLOCK_SIZE, vDecals[(int)WT::BLOCKS][block.nDecal], olc::vf2d{1.0f,1.0f} * BLOCK_SIZE, tint);
             }
         
-        // draw player
-        if (player.nDecal == 1)
-            tv.DrawPartialDecal(player.pos * BLOCK_SIZE, vDecals[(int)WT::MOBS][player.nDecal], olc::vf2d{0,0}, MOB_SIZE, BLOCK_SIZE * BLOCK_SIZE / MOB_SIZE);
         // draw mobs
         for (const auto& mob : vMobs)
         {
@@ -222,6 +221,10 @@ public:
             if (!tv.IsRectVisible(mob.pos * BLOCK_SIZE, relSize)) continue;
             tv.DrawPartialDecal(mob.pos * BLOCK_SIZE, BLOCK_SIZE * relSize, vDecals[(int)WT::MOBS][mob.nDecal], olc::vf2d{0,0}, MOB_SIZE);
         }
+        
+        // draw player
+        if (player.nDecal == 1)
+            tv.DrawPartialDecal(player.pos * BLOCK_SIZE, vDecals[(int)WT::MOBS][player.nDecal], olc::vf2d{0,0}, MOB_SIZE, BLOCK_SIZE * BLOCK_SIZE / MOB_SIZE);
 
         if (vCurrCell.x < TL.x / BLOCK_SIZE) vCurrCell.x = TL.x / BLOCK_SIZE;
         if (vCurrCell.y < TL.y / BLOCK_SIZE) vCurrCell.y = TL.y / BLOCK_SIZE;
@@ -258,6 +261,12 @@ public:
         default:
             assert(false && "Unimplemented type try to show itself.");
         }
+        
+        auto endTime = std::chrono::high_resolution_clock::now();
+        float frameTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+        float fSleepFor = (1000.0f / MAX_FPS) - frameTime;
+        if (fSleepFor > 0.0f)
+            std::this_thread::sleep_for(std::chrono::milliseconds((int)fSleepFor));
 		return true;
 	}
 
@@ -308,7 +317,7 @@ public:
 
         }
 
-        if (c1 == "load")
+        if (c1 == "load" || c1 == "laod")
         {
             std::string c2;
             if (!(ss >> c2))
