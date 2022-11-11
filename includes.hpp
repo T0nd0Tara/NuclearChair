@@ -22,6 +22,8 @@
 #include "block.hpp"
 #include "map.hpp"
 
+#define PI 3.14159f
+
 #define RESOLUTION 4
 #define MAX_FPS 60.0f
 
