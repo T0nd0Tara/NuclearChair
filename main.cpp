@@ -1,10 +1,5 @@
 #include "includes.hpp"
 
-struct Target
-{
-    olc::Decal* decal;
-    olc::vf2d pos;
-};
 
 class NuclearChair : public olc::PixelGameEngine
 {
@@ -32,6 +27,29 @@ public:
         ConsoleCaptureStdOut(false);
     }
 private:
+    struct Target
+    {
+        olc::Decal* decal;
+        olc::vf2d pos;
+    };
+
+    struct Bullet
+    {
+        olc::vf2d pos;
+        float fDir;
+        bool bDamagePlayer  : 1 = false;
+        bool bDamageEnemies : 1 = false;
+
+        constexpr static float fBulletSpeed = 5.0f;
+
+        inline void move(float fElapsedTime)
+        {
+            pos += olc::vf2d{cosf(fDir), sinf(fDir)} * fBulletSpeed * fElapsedTime;
+        }
+    };
+
+    // Bullet::fBulletSpeed = 5.0f;
+
     olc::TransformedView tv;
 
     Map map;
@@ -45,6 +63,8 @@ private:
     float fPlayerSpeed = 7.0f;
 
     Target target;
+
+    std::vector<Bullet> vBullets;
 
     void handleControls()
     {
@@ -101,12 +121,26 @@ private:
 
     void updateGame()
     {
-        // const float& fElapsedTime = GetElapsedTime();
+        const float& fElapsedTime = GetElapsedTime();
 
         target.pos = tv.ScreenToWorld(GetMousePos()) / fBLOCK_SIZE;
 
         constexpr float fPlayerPerc = 0.2f;
         tv.SetWorldOffset(lerp(player.pos, target.pos, fPlayerPerc) * fBLOCK_SIZE - olc::vf2d{(float)ScreenWidth(), (float)ScreenHeight()} );
+
+        // update bullets
+        for (int i=0; i<vBullets.size(); i++)
+        {
+            auto& b = vBullets[i];
+            b.move(fElapsedTime);
+
+            if (!map.get(b.pos.floor()).bBG)
+            {
+                vBullets.erase(vBullets.begin() + i);
+                i--;
+            }
+
+        }
 
         
     }
@@ -130,7 +164,7 @@ public:
             std::transform(sDir.begin(), sDir.end(), sDir.begin(),
                 [](unsigned char c){ return std::tolower(c); });
 
-            for (const auto& file : std::filesystem::directory_iterator("./" + sDir))
+            for (const auto& file : std::filesystem::directory_iterator("world_types/" + sDir))
                 files.insert(file.path());
 
             vDecals.emplace_back();
@@ -215,7 +249,6 @@ public:
         // draw player
         if (player.nDecal == 1)
         {
-            // tv.FillRectDecal(player.pos * BLOCK_SIZE, BLOCK_SIZE * BLOCK_SIZE / MOB_SIZE);
             tv.DrawPartialDecal(player.pos * BLOCK_SIZE, vDecals[(int)WT::MOBS][player.nDecal], olc::vf2d{0,0}, MOB_SIZE, BLOCK_SIZE * BLOCK_SIZE / MOB_SIZE);
             tv.DrawDecal(target.pos * BLOCK_SIZE - olc::vi2d{BLOCK_SIZE, BLOCK_SIZE} / 2 , target.decal, TARGET_SIZE * fBLOCK_SIZE);
         }

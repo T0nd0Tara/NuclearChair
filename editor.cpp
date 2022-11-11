@@ -139,7 +139,7 @@ public:
             std::transform(sDir.begin(), sDir.end(), sDir.begin(),
                 [](unsigned char c){ return std::tolower(c); });
 
-            for (const auto& file : std::filesystem::directory_iterator("./" + sDir))
+            for (const auto& file : std::filesystem::directory_iterator("world_types/" + sDir))
                 files.insert(file.path());
 
             vDecals.emplace_back();
