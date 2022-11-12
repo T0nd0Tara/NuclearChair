@@ -186,12 +186,14 @@ public:
         map.shrink_to_fit();
 
         // write player
-        f.write((char*)&map.player, sizeof(map.player));
+        // f.write((char*)&map.player, sizeof(map.player));
+        f << map.player;
         f << '\n';
 
         // write mobs
         for (const auto& mob : map.vMobs)
-            f.write((char*)&mob, sizeof(mob));
+            f << mob;
+            // f.write((char*)&mob, sizeof(mob));
         f << '\n';
 
         // write map
@@ -215,7 +217,8 @@ public:
         // read player
         if (f.peek() != '\n')
         {
-            f.read((char*)&map.player, sizeof(map.player));
+            // f.read((char*)&map.player, sizeof(map.player));
+            f >> map.player;
             assert(f.peek() == '\n');
 
         }
@@ -225,7 +228,8 @@ public:
         while (f.peek() != '\n')
         {
             map.vMobs.emplace_back();
-            f.read((char*)&map.vMobs.back(), sizeof(map.vMobs.back()));
+            // f.read((char*)&map.vMobs.back(), sizeof(map.vMobs.back()));
+            f >> map.vMobs.back();
         }
         f.ignore();
 

@@ -90,9 +90,9 @@ private:
 
                 if (nCurrDecal == 0) break;
                 if (nCurrDecal == 1)
-                    player = Mob(vCurrCell, nCurrDecal, Mob::mobHp(nCurrDecal)); 
+                    player = Mob(vCurrCell, nCurrDecal); 
                 else
-                    vMobs.emplace_back(vCurrCell, nCurrDecal, Mob::mobHp(nCurrDecal));
+                    vMobs.emplace_back(vCurrCell, nCurrDecal);
                 break;
             }
             default:
@@ -151,8 +151,10 @@ public:
                 vDecals[nType].push_back(new olc::Decal(new olc::Sprite(sPath)));
                 if (nType == (int)WT::MOBS)
                 {
-                    assert(vDecals[nType].back()->sprite->width  == MOB_SPRITE_WIDTH);
-                    assert(vDecals[nType].back()->sprite->height == MOB_SPRITE_HEIGHT);
+                    Mob::vMobHp.push_back(100);
+
+                    assert(vDecals[nType].back()->sprite->width  == MOB_FILE_SIZE.x);
+                    assert(vDecals[nType].back()->sprite->height == MOB_FILE_SIZE.y);
 
                 }
             }
